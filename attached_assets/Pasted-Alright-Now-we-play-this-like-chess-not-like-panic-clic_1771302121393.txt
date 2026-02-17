@@ -1,0 +1,196 @@
+Alright. Now we play this like chess, not like panic-clicking.
+
+You want:
+
+• Full build
+• Modern UI
+• Spin wheel premium
+• Admin control
+• Team remove + reset
+• Scoreboard advanced
+• Bug fixes
+• But under ~4 credits
+
+That means:
+No storytelling. No repetition. No wasted tokens.
+Ultra-dense instruction block.
+
+Copy ONLY this into Lovable. Nothing else.
+
+---
+
+BUILD FROM SCRATCH: LOGISTICS QUIZ ARENA 2025
+
+Create a real-time web app for a college bidding quiz event.
+
+Tech:
+HTML, modern CSS, Vanilla JS, Firebase Realtime Database.
+Clean modular structure. No heavy libraries.
+
+Theme:
+Dark navy gradient background.
+Neon gold accents.
+Glassmorphism panels.
+Orbitron + Montserrat fonts.
+Esports dashboard style.
+Large projector-friendly UI.
+
+SYSTEM:
+Two views:
+
+1. Team View
+2. Admin Dashboard
+
+TEAMS:
+ALPHA, NOVA, ZENITH, TITAN, NEXUS
+Initial balance: 10000
+Total rounds: 5 only
+
+TEAM FLOW:
+Intro screen with animated background + Enter button.
+Modern 3D spin wheel:
+
+* Smooth easing
+* Gold rim glow
+* Tick sound
+* Confetti on selection
+* Disable selected teams
+* Prevent duplicate registration
+
+After selection:
+Store team in Firebase with balance 10000.
+Redirect to Team Dashboard.
+
+TEAM DASHBOARD:
+Show:
+
+* Glowing team name
+* Animated balance counter
+* Round progress (1/5)
+* Glass question panel
+* Circular 30s timer
+
+During bidding:
+
+* Bid input
+* Disable after lock
+
+During question:
+
+* Only winning team can answer
+* Fix bug: ensure winning team can select option
+* Others disabled
+
+Correct:
++bid amount with green flash animation
+Wrong:
+-bid amount with red shake animation
+
+ADMIN DASHBOARD:
+Command center layout.
+
+Left:
+Round controls:
+
+* Start Round
+* Open Bidding
+* Lock Bidding
+* Reveal Question
+* Mark Correct
+* Mark Wrong
+* Next Round
+
+Center:
+Live animated scoreboard:
+
+* 5 team cards
+* Real-time bid display
+* Animated balance counter
+* Highest balance glowing
+* Auto sorting
+
+Right:
+Game status panel
+Current round
+Current phase
+Winning team highlight
+
+TEAM MANAGEMENT (important):
+Per team controls:
+
+* Remove Team (with confirmation)
+* Reset Balance to 10000
+* Disable/Enable Team
+
+Game Reset Panel:
+
+* Reset Current Round (clear bids only)
+* Reset All Balances
+* Full Reset (clear teams + rounds + bids)
+
+When team removed:
+
+* Delete from database
+* Free team name in spin wheel
+* Update scoreboard instantly
+
+Tie rule:
+Highest bid wins.
+If tie, first submission wins.
+
+Prevent:
+
+* Bidding after lock
+* Duplicate teams
+* Refresh reset issues
+* State corruption
+
+WINNER:
+After round 5:
+Auto calculate highest balance.
+Show full screen winner celebration:
+
+* Giant glowing team name
+* Fireworks
+* Confetti
+* Victory animation
+
+Deliver:
+index.html
+admin.html
+styles.css
+script.js
+firebase setup instructions
+
+Production-ready.
+Smooth animations.
+No raw UI.
+No basic layouts.
+
+---
+
+That’s optimized.
+Compact.
+Powerful.
+Should stay within ~4 credits.
+
+Now important:
+
+When it generates, DO NOT immediately ask for redesign.
+
+First:
+Test:
+Spin
+Duplicate block
+Bid lock
+Answer selection
+Remove team
+Reset round
+Round 5 winner
+
+Only then modify.
+
+Credits are fuel.
+Use them like a strategist, not a gambler.
+
+Now go build it properly.
