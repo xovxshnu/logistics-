@@ -51,14 +51,45 @@ export async function registerRoutes(
     try {
       const { password, ...updates } = api.game.update.input.parse(req.body);
       checkAdmin(password);
-      
+
+      const currentState = await storage.getGameState();
+
+      // Phase flow enforcement
+      if (updates.phase && updates.phase !== currentState.phase) {
+        const validTransitions: Record<string, string[]> = {
+          'lobby': ['bidding'],
+          'bidding': ['bidding_locked'],
+          'bidding_locked': ['question'],
+          'question': ['scoring'],
+          'scoring': ['bidding', 'ended'],
+        };
+
+        const allowedNextPhases = validTransitions[currentState.phase] || [];
+        if (!allowedNextPhases.includes(updates.phase)) {
+          return res.status(400).json({
+            message: `Invalid phase transition from ${currentState.phase} to ${updates.phase}`
+          });
+        }
+      }
+
+      // Auto-set bidding timer when entering bidding phase
+      if (updates.phase === 'bidding') {
+        const biddingEndsAt = new Date(Date.now() + 30000); // 30 seconds from now
+        updates.biddingEndsAt = biddingEndsAt;
+      }
+
+      // Auto-end game after round 5
+      if (updates.currentRound && updates.currentRound > 5) {
+        updates.phase = 'ended';
+      }
+
       const state = await storage.updateGameState(updates);
       res.json(state);
     } catch (err: any) {
       if (err.message === "Unauthorized") {
         return res.status(403).json({ message: "Invalid admin password" });
       }
-      res.status(400).json({ message: "Invalid update" });
+      res.status(400).json({ message: err.message || "Invalid update" });
     }
   });
 
@@ -66,7 +97,7 @@ export async function registerRoutes(
     try {
       const { type, password } = api.game.reset.input.parse(req.body);
       checkAdmin(password);
-      
+
       await storage.resetGame(type);
       res.json({ success: true });
     } catch (err: any) {
@@ -118,7 +149,7 @@ export async function registerRoutes(
     try {
       const { teamId, amount } = api.bids.place.input.parse(req.body);
       const state = await storage.getGameState();
-      
+
       if (!state.isBiddingOpen) return res.status(400).json({ message: "Bidding closed" });
       if (state.biddingEndsAt && new Date() > new Date(state.biddingEndsAt)) {
         return res.status(400).json({ message: "Timer expired" });

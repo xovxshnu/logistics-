@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { GameState, Team, Bid } from "@shared/schema";
-import { z } from "zod";
 
 // --- GAME STATE HOOKS ---
 
@@ -29,13 +28,13 @@ export function useUpdateGameState() {
         activeTeamId: updates.activeTeamId,
         winningBidAmount: updates.winningBidAmount,
       };
-      
+
       const res = await fetch(api.game.update.path, {
         method: api.game.update.method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       if (!res.ok) throw new Error("Failed to update game state");
       return api.game.update.responses[200].parse(await res.json());
     },
@@ -140,16 +139,16 @@ export function usePlaceBid() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      
+
       if (!res.ok) {
         if (res.status === 400) {
-           // Try to parse the specific validation error
-           try {
-             const err = await res.json();
-             throw new Error(err.message || "Invalid bid");
-           } catch (e) {
-             throw new Error("Bid failed");
-           }
+          // Try to parse the specific validation error
+          try {
+            const err = await res.json();
+            throw new Error(err.message || "Invalid bid");
+          } catch (e) {
+            throw new Error("Bid failed");
+          }
         }
         throw new Error("Failed to place bid");
       }
@@ -160,5 +159,22 @@ export function usePlaceBid() {
       queryClient.invalidateQueries({ queryKey: [api.teams.list.path] }); // Balance updates
       queryClient.invalidateQueries({ queryKey: [api.game.state.path] }); // Winning bid updates
     },
+  });
+}
+
+// --- QUESTION HOOKS ---
+
+export function useCurrentQuestion() {
+  return useQuery({
+    queryKey: [api.questions.current.path],
+    queryFn: async () => {
+      const res = await fetch(api.questions.current.path);
+      if (!res.ok) {
+        if (res.status === 404) return null;
+        throw new Error("Failed to fetch current question");
+      }
+      return api.questions.current.responses[200].parse(await res.json());
+    },
+    refetchInterval: 1000,
   });
 }

@@ -4,8 +4,8 @@ import { NeonButton } from '@/components/NeonButton';
 import { TeamCard } from '@/components/TeamCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { GameState, Team } from '@shared/schema';
-import { 
-  Play, Pause, Lock, Unlock, RefreshCw, Trophy, 
+import {
+  Play, Pause, Lock, Unlock, RefreshCw, Trophy,
   ChevronRight, AlertTriangle, ArrowUpCircle, Check, X
 } from 'lucide-react';
 import {
@@ -23,15 +23,67 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
   const { data: gameState } = useGameState();
   const { data: teams } = useTeams();
   const { data: bids } = useCurrentBids();
-  
+
   const updateGameMutation = useUpdateGameState();
   const resetGameMutation = useResetGame();
-  
+
   // Local loading state handling for smoother UI
   const isUpdating = updateGameMutation.isPending;
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'admin123') {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Invalid password');
+      setPassword('');
+    }
+  };
+
+  // Password gate screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="glass-panel p-8 rounded-xl border-primary/20 max-w-md w-full">
+          <div className="text-center mb-8">
+            <Lock className="w-16 h-16 text-primary mx-auto mb-4" />
+            <h1 className="text-2xl font-display font-bold text-primary mb-2">ADMIN ACCESS</h1>
+            <p className="text-slate-400">Enter password to continue</p>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                autoFocus
+              />
+              {error && (
+                <p className="text-red-400 text-sm mt-2 flex items-center gap-2">
+                  <X className="w-4 h-4" /> {error}
+                </p>
+              )}
+            </div>
+
+            <NeonButton type="submit" className="w-full" size="lg">
+              UNLOCK DASHBOARD
+            </NeonButton>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (!gameState || !teams) return <div className="p-8 text-white">Loading Admin...</div>;
 
@@ -39,40 +91,42 @@ export default function AdminDashboard() {
   const sortedTeams = [...teams].sort((a, b) => b.balance - a.balance);
 
   // Identify winning bid
-  const winningBid = bids && bids.length > 0 
+  const winningBid = bids && bids.length > 0
     ? bids.reduce((prev, current) => (prev.amount > current.amount) ? prev : current)
     : null;
 
   const handlePhaseChange = (phase: GameState['phase']) => {
-    updateGameMutation.mutate({ phase });
+    updateGameMutation.mutate({ phase, password: 'admin123' });
   };
 
   const toggleBidding = () => {
-    updateGameMutation.mutate({ isBiddingOpen: !gameState.isBiddingOpen });
+    updateGameMutation.mutate({ isBiddingOpen: !gameState.isBiddingOpen, password: 'admin123' });
   };
 
   const nextRound = () => {
-    updateGameMutation.mutate({ 
+    updateGameMutation.mutate({
       currentRound: gameState.currentRound + 1,
-      phase: 'round_start',
+      phase: 'bidding',
       isBiddingOpen: false,
       activeTeamId: null,
-      winningBidAmount: 0
+      winningBidAmount: 0,
+      password: 'admin123'
     });
   };
 
   const revealActiveTeam = () => {
     if (winningBid) {
-      updateGameMutation.mutate({ 
+      updateGameMutation.mutate({
         activeTeamId: winningBid.teamId,
         winningBidAmount: winningBid.amount,
-        phase: 'question'
+        phase: 'question',
+        password: 'admin123'
       });
     }
   };
 
   const handleReset = (type: 'round' | 'balance' | 'full') => {
-    resetGameMutation.mutate(type);
+    resetGameMutation.mutate({ type, password: 'admin123' });
   };
 
   return (
@@ -83,11 +137,14 @@ export default function AdminDashboard() {
           <div className="flex gap-4 mt-2">
             <StatusBadge phase={gameState.phase} isBiddingOpen={gameState.isBiddingOpen} />
             <Badge variant="secondary" className="font-mono">ROUND {gameState.currentRound}</Badge>
+            {gameState.currentQuestionId && (
+              <Badge variant="outline" className="font-mono">Q{gameState.currentQuestionId}</Badge>
+            )}
           </div>
         </div>
-        
+
         <div className="flex gap-2">
-           <AlertDialog>
+          <AlertDialog>
             <AlertDialogTrigger asChild>
               <NeonButton variant="danger" size="sm">RESET GAME</NeonButton>
             </AlertDialogTrigger>
@@ -112,15 +169,24 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT COL: CONTROLS (3 cols) */}
         <div className="lg:col-span-3 space-y-6">
-          
+
           {/* Phase Controls */}
           <div className="glass-panel p-6 rounded-xl border-slate-800">
             <h3 className="text-slate-400 text-sm font-bold uppercase mb-4 flex items-center gap-2">
               <Play className="w-4 h-4" /> Game Flow
             </h3>
-            
+
             <div className="grid grid-cols-1 gap-3">
-              <NeonButton 
+              <NeonButton
+                variant={gameState.phase === 'lobby' ? 'primary' : 'outline'}
+                className="justify-start text-left"
+                onClick={() => handlePhaseChange('lobby')}
+                disabled={isUpdating}
+              >
+                0. Lobby
+              </NeonButton>
+
+              <NeonButton
                 variant={gameState.phase === 'round_start' ? 'primary' : 'outline'}
                 className="justify-start text-left"
                 onClick={() => handlePhaseChange('round_start')}
@@ -128,8 +194,8 @@ export default function AdminDashboard() {
               >
                 1. Round Start
               </NeonButton>
-              
-              <NeonButton 
+
+              <NeonButton
                 variant={gameState.phase === 'bidding' ? 'primary' : 'outline'}
                 className="justify-start text-left"
                 onClick={() => handlePhaseChange('bidding')}
@@ -137,8 +203,8 @@ export default function AdminDashboard() {
               >
                 2. Bidding Phase
               </NeonButton>
-              
-              <NeonButton 
+
+              <NeonButton
                 variant={gameState.phase === 'bidding_locked' ? 'primary' : 'outline'}
                 className="justify-start text-left"
                 onClick={() => handlePhaseChange('bidding_locked')}
@@ -147,7 +213,7 @@ export default function AdminDashboard() {
                 3. Lock Bids
               </NeonButton>
 
-              <NeonButton 
+              <NeonButton
                 variant={gameState.phase === 'question' ? 'primary' : 'outline'}
                 className="justify-start text-left"
                 onClick={() => handlePhaseChange('question')}
@@ -156,7 +222,7 @@ export default function AdminDashboard() {
                 4. Question Time
               </NeonButton>
 
-              <NeonButton 
+              <NeonButton
                 variant={gameState.phase === 'scoring' ? 'primary' : 'outline'}
                 className="justify-start text-left"
                 onClick={() => handlePhaseChange('scoring')}
@@ -172,20 +238,20 @@ export default function AdminDashboard() {
             <h3 className="text-slate-400 text-sm font-bold uppercase mb-4 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" /> Actions
             </h3>
-            
+
             <div className="grid gap-3">
               <div className="grid grid-cols-2 gap-2">
-                <NeonButton 
-                  size="sm" 
+                <NeonButton
+                  size="sm"
                   variant={gameState.isBiddingOpen ? "danger" : "secondary"}
                   onClick={toggleBidding}
                   disabled={isUpdating}
                 >
-                  {gameState.isBiddingOpen ? <><Lock className="w-4 h-4 mr-1"/> Close</> : <><Unlock className="w-4 h-4 mr-1"/> Open</>}
+                  {gameState.isBiddingOpen ? <><Lock className="w-4 h-4 mr-1" /> Close</> : <><Unlock className="w-4 h-4 mr-1" /> Open</>}
                 </NeonButton>
 
-                <NeonButton 
-                  size="sm" 
+                <NeonButton
+                  size="sm"
                   variant="outline"
                   onClick={revealActiveTeam}
                   disabled={isUpdating || !winningBid}
@@ -194,7 +260,7 @@ export default function AdminDashboard() {
                 </NeonButton>
               </div>
 
-              <NeonButton 
+              <NeonButton
                 variant="secondary"
                 className="w-full mt-2"
                 onClick={nextRound}
@@ -215,9 +281,9 @@ export default function AdminDashboard() {
 
             <div className="space-y-3">
               {sortedTeams.map((team, index) => (
-                <TeamCard 
-                  key={team.id} 
-                  team={team} 
+                <TeamCard
+                  key={team.id}
+                  team={team}
                   rank={index + 1}
                   isActive={team.id === gameState.activeTeamId}
                 />
@@ -227,16 +293,16 @@ export default function AdminDashboard() {
             {/* Active Round Info */}
             <div className="mt-8 pt-8 border-t border-slate-800">
               <div className="grid grid-cols-2 gap-4 text-center">
-                 <div className="bg-slate-900/50 p-4 rounded-lg">
-                   <div className="text-slate-500 text-xs uppercase mb-1">Total Bids</div>
-                   <div className="text-2xl font-mono font-bold">{bids?.length || 0}</div>
-                 </div>
-                 <div className="bg-slate-900/50 p-4 rounded-lg">
-                   <div className="text-slate-500 text-xs uppercase mb-1">Highest Bid</div>
-                   <div className="text-2xl font-mono font-bold text-primary">
-                     ${winningBid?.amount.toLocaleString() || 0}
-                   </div>
-                 </div>
+                <div className="bg-slate-900/50 p-4 rounded-lg">
+                  <div className="text-slate-500 text-xs uppercase mb-1">Total Bids</div>
+                  <div className="text-2xl font-mono font-bold">{bids?.length || 0}</div>
+                </div>
+                <div className="bg-slate-900/50 p-4 rounded-lg">
+                  <div className="text-slate-500 text-xs uppercase mb-1">Highest Bid</div>
+                  <div className="text-2xl font-mono font-bold text-primary">
+                    ${winningBid?.amount.toLocaleString() || 0}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -248,21 +314,20 @@ export default function AdminDashboard() {
             <h3 className="text-slate-400 text-sm font-bold uppercase mb-4 flex items-center gap-2">
               <ArrowUpCircle className="w-4 h-4" /> Incoming Bids
             </h3>
-            
+
             <ScrollArea className="flex-1 pr-4 max-h-[600px]">
               <div className="space-y-2">
                 {bids && bids.length > 0 ? (
                   // Sort bids high to low for display
-                  [...bids].sort((a,b) => b.amount - a.amount).map((bid) => {
+                  [...bids].sort((a, b) => b.amount - a.amount).map((bid) => {
                     const team = teams.find(t => t.id === bid.teamId);
                     const isWinning = winningBid?.id === bid.id;
 
                     return (
-                      <div 
-                        key={bid.id} 
-                        className={`flex justify-between items-center p-3 rounded text-sm ${
-                          isWinning ? 'bg-primary/20 border border-primary/50' : 'bg-slate-900 border border-slate-800'
-                        }`}
+                      <div
+                        key={bid.id}
+                        className={`flex justify-between items-center p-3 rounded text-sm ${isWinning ? 'bg-primary/20 border border-primary/50' : 'bg-slate-900 border border-slate-800'
+                          }`}
                       >
                         <div className="font-semibold">
                           {team?.name || 'Unknown'}

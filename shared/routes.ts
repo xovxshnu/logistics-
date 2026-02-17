@@ -106,6 +106,11 @@ export const api = {
       method: 'GET' as const,
       path: '/api/bids/current' as const,
       responses: { 200: z.array(z.custom<typeof bids.$inferSelect>()) },
+    },
+    currentRound: {
+      method: 'GET' as const,
+      path: '/api/bids/current' as const,
+      responses: { 200: z.array(z.custom<typeof bids.$inferSelect>()) },
     }
   }
 };
