@@ -1,0 +1,119 @@
+Modify my existing Logistics Quiz website with the following updates:
+
+1️⃣ Landing Page Improvements
+Add advanced logistics themed animation or background image (containers / cargo ship / supply chain theme).
+
+Modern navy blue + gold design.
+
+Smooth fade-in text animation.
+
+Professional look for college event.
+
+2️⃣ Add Spin Wheel (Team Selection)
+Add spin wheel with 5 teams:
+Alpha, Nova, Zenith, Titan, Nexus
+
+Wheel must:
+
+Select team first
+
+Rotate to selected team
+
+Show result correctly (no mismatch)
+
+After spin → show "Enter Dashboard" button
+
+Save team in localStorage
+
+3️⃣ Team Dashboard Updates
+Add:
+
+Live Score Card
+
+Animated score increase/decrease (count-up animation)
+
+Show:
+
+Current Balance
+
+Current Round (Round 1 to 5)
+
+Question Number
+
+Show bidding timer (countdown)
+
+Disable bid when timer ends
+
+Clean UI layout
+
+4️⃣ Admin Panel Updates
+Add Admin password protection (simple hardcoded password)
+
+Change admin UI to professional dashboard layout
+
+Show:
+
+All teams
+
+Their balances
+
+Their bids (live)
+
+Highlight highest bid
+
+Add:
+
+Start Bidding button
+
+Lock Bidding button
+
+Show Question button
+
+Next Round button
+
+5️⃣ Question System
+Add 10 logistics-related MCQ questions
+
+Only 5 rounds active (use first 5 questions)
+
+Show Question Number during bidding (e.g., "Round 2 – Question 2")
+
+6️⃣ Bidding System Improvements
+Add 30-second bid timer
+
+After timer → auto lock bidding
+
+Highest bidder wins
+
+Only winning team sees question
+
+7️⃣ Score Animation
+When correct → animate score increase
+
+When wrong → animate score decrease
+
+Smooth number transition effect
+
+8️⃣ Game Rules
+5 teams
+
+5 rounds only
+
+Initial balance: $10,000
+
+Winning team:
+Correct → +bid
+Wrong → -bid
+
+Other teams: no change
+
+After 5 rounds → show winner page with animation
+
+9️⃣ Performance Requirement
+Keep code simple (HTML + CSS + JS)
+
+Do not convert to React
+
+Optimize for Replit hosting
+
+Avoid unnecessary libraries

@@ -1,17 +1,11 @@
 
 import { z } from 'zod';
-import { insertTeamSchema, insertBidSchema, teams, gameState, bids } from './schema';
+import { teams, gameState, bids, questions } from './schema';
 
 export const errorSchemas = {
-  validation: z.object({
-    message: z.string(),
-  }),
-  notFound: z.object({
-    message: z.string(),
-  }),
-  conflict: z.object({
-    message: z.string(),
-  })
+  validation: z.object({ message: z.string() }),
+  notFound: z.object({ message: z.string() }),
+  forbidden: z.object({ message: z.string() }),
 };
 
 export const api = {
@@ -19,62 +13,79 @@ export const api = {
     list: {
       method: 'GET' as const,
       path: '/api/teams' as const,
-      responses: {
-        200: z.array(z.custom<typeof teams.$inferSelect>()),
-      },
+      responses: { 200: z.array(z.custom<typeof teams.$inferSelect>()) },
     },
-    reset: { // Reset specific team balance
-      method: 'POST' as const,
-      path: '/api/teams/:id/reset' as const,
-      responses: {
-        200: z.custom<typeof teams.$inferSelect>(),
-      }
-    },
-    remove: { // Soft delete or deactivate
-      method: 'DELETE' as const,
-      path: '/api/teams/:id' as const,
-      responses: {
-        200: z.custom<typeof teams.$inferSelect>(),
-      }
-    },
-    spin: { // Mark team as spun/entered
+    spin: {
       method: 'POST' as const,
       path: '/api/teams/:id/spin' as const,
-      responses: {
-        200: z.custom<typeof teams.$inferSelect>(),
-      }
+      responses: { 200: z.custom<typeof teams.$inferSelect>() },
+    },
+    reset: {
+      method: 'POST' as const,
+      path: '/api/teams/:id/reset' as const,
+      responses: { 200: z.custom<typeof teams.$inferSelect>() },
+    },
+    remove: {
+      method: 'DELETE' as const,
+      path: '/api/teams/:id' as const,
+      responses: { 200: z.custom<typeof teams.$inferSelect>() },
     }
   },
   game: {
     state: {
       method: 'GET' as const,
       path: '/api/game/state' as const,
-      responses: {
-        200: z.custom<typeof gameState.$inferSelect>(),
-      },
+      responses: { 200: z.custom<typeof gameState.$inferSelect>() },
     },
-    update: { // Admin controls
+    update: {
       method: 'POST' as const,
       path: '/api/game/update' as const,
       input: z.object({
-        phase: z.enum(['lobby', 'round_start', 'bidding', 'bidding_locked', 'question', 'scoring', 'ended']).optional(),
+        phase: z.string().optional(),
         currentRound: z.number().optional(),
+        currentQuestionId: z.number().optional(),
         isBiddingOpen: z.boolean().optional(),
         activeTeamId: z.number().nullable().optional(),
-        winningBidAmount: z.number().optional(),
+        winningBidAmount: z.number().nullable().optional(),
+        password: z.string().optional(), // For admin protection
       }),
       responses: {
         200: z.custom<typeof gameState.$inferSelect>(),
+        403: errorSchemas.forbidden,
       },
     },
-    reset: { // Full game reset
+    reset: {
       method: 'POST' as const,
       path: '/api/game/reset' as const,
       input: z.object({
-        type: z.enum(['round', 'balance', 'full'])
+        type: z.enum(['round', 'balance', 'full']),
+        password: z.string(),
       }),
       responses: {
         200: z.object({ success: z.boolean() }),
+        403: errorSchemas.forbidden,
+      }
+    },
+    submitAnswer: {
+      method: 'POST' as const,
+      path: '/api/game/answer' as const,
+      input: z.object({
+        teamId: z.number(),
+        option: z.string(), // 'A', 'B', 'C', 'D'
+      }),
+      responses: {
+        200: z.object({ correct: z.boolean(), newBalance: z.number(), correctAnswer: z.string() }),
+        400: errorSchemas.validation,
+      }
+    }
+  },
+  questions: {
+    current: {
+      method: 'GET' as const,
+      path: '/api/questions/current' as const,
+      responses: {
+        200: z.custom<typeof questions.$inferSelect>(),
+        404: errorSchemas.notFound,
       }
     }
   },
@@ -88,15 +99,13 @@ export const api = {
       }),
       responses: {
         201: z.custom<typeof bids.$inferSelect>(),
-        400: errorSchemas.validation, // Bid too high or locked
+        400: errorSchemas.validation,
       }
     },
-    currentRound: {
+    current: {
       method: 'GET' as const,
       path: '/api/bids/current' as const,
-      responses: {
-        200: z.array(z.custom<typeof bids.$inferSelect>()),
-      }
+      responses: { 200: z.array(z.custom<typeof bids.$inferSelect>()) },
     }
   }
 };
